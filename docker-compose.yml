@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  drivefoldercsv:
+    image: drivefoldercsv
+    environment:
+      DEFAULT_URL: ${DEFAULT_URL}
+      SCOPES: ${SCOPES}
+    build:
+      context: .
+      dockerfile: ./Dockerfile

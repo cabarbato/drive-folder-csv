@@ -1,0 +1,11 @@
+# Common folders and files - Python
+.vscode/
+input/
+output/
+.env
+.DS_Store
+
+#Google Auth
+client_secret.json
+credentials.json
+token.pickle
