@@ -5,6 +5,7 @@ services:
     image: drivefoldercsv
     environment:
       DEFAULT_URL: ${DEFAULT_URL}
+      OUTPUT_URL: ${OUTPUT_URL}
       SCOPES: ${SCOPES}
     build:
       context: .

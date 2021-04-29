@@ -1,8 +1,10 @@
+import io
 import os
 import sys
 import csv
 import pickle
 import requests
+from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -31,9 +33,10 @@ class FolderParser:
             with open('token.pickle', 'wb') as token:
                 pickle.dump(self.creds, token)
 
+        self.service = build('drive', 'v3', credentials=self.creds)
+
     def findFolder(self, folder_id):
-        service = build('drive', 'v3', credentials=self.creds)
-        results = service.files().list( 
+        results = self.service.files().list( 
             supportsAllDrives="true",
             q=f"'{folder_id}' in parents",
             pageToken=self.next_page
@@ -50,18 +53,42 @@ class FolderParser:
             if self.next_page: self.findFolder(folder_id)
 
     def writeRow(self, d):
+        global download_images
+
         file_id = d.get("id")
-        file_name = d.get("name")
-        csvwriter.writerow([file_id, file_name, "https://drive.google.com/file/d/" + file_id])
+        file_name = d.get("name").lower().replace(" ","-")
+        file_url = os.getenv("OUTPUT_URL", default=None) + file_name
+        drive_url = "https://drive.google.com/file/d/" + file_id
+
+        self.downloadImage(file_id, file_name)
+
+        csvwriter.writerow([
+            file_id, 
+            d.get("name"), 
+            drive_url if not file_url else file_url
+        ])
+    
+    def downloadImage(self, file_id, file_name):
+        request = self.service.files().get_media(fileId=file_id)
+        fh = io.FileIO('./data/output/' + file_name, mode='wb')
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            print("Download %d%%." % int(status.progress() * 100))
 
 
 if __name__ == "__main__":
     SCOPES = os.getenv("SCOPES", default=None).split(',')
 
     if len(sys.argv) > 1:
-        filename, URL = sys.argv
+        if len(sys.argv) is 1:
+            filename, URL = sys.argv
+            download_images = 0
+        else: filename, URL, download_images = sys.argv
     else: 
         URL = os.getenv("DEFAULT_URL", default=None)
+        download_images = 0
 
     while True:
         if not URL: 

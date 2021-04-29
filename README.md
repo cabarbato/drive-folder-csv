@@ -3,6 +3,10 @@
 This script uses the Google API to create a csv listing all files within a Drive folder. Each row contains the file id, name and url.
 
 ---
+### Updates:
+**4/29/2021:** Added option to download images; reformat name so it's web safe.
+
+---
 
 ### Usage:
 1. Create an .env file with your Google Sheets info and destination website url (optional).
